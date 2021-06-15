@@ -1,0 +1,67 @@
+version: '3.7'
+services:
+ nginx:
+  build: requirements/nginx
+  image: nginx:nginx
+  ports:
+   - "443:443"
+  restart: always
+  container_name: nginx
+  networks:
+   - docker-network
+  depends_on:
+   - wordpress
+  volumes:
+   - 'wordpress:/var/www/'
+
+ mariadb:
+  environment:
+   DB_NAME: ${DB_NAME}
+   DB_USER: ${DB_USER}
+   DB_PASSWORD: ${DB_PASSWORD}
+  build: requirements/mariadb
+  image: mariadb:mariadb
+  ports:
+   - "3306:3306"
+  restart: always
+  container_name: mariadb
+  networks:
+   - docker-network
+  volumes:
+   - 'mariadb:/var/lib/mysql'
+
+ wordpress:
+  environment:
+   DB_NAME: ${DB_NAME}
+   DB_USER: ${DB_USER}
+   DB_PASSWORD: ${DB_PASSWORD}
+   DB_HOST: ${DB_HOST}
+  depends_on:
+   - mariadb
+  build: requirements/wordpress
+  image: wordpress:wordpress
+  volumes:
+   - 'wordpress:/var/www/'
+  ports:
+   - "9000:9000"
+  restart: always
+  container_name: wordpress
+  networks:
+   - docker-network
+
+networks:
+  docker-network:
+
+volumes:
+ mariadb:
+  driver: local
+  driver_opts:
+   o: bind
+   type: ext4
+   device: /home/yviavant/data/mariadb
+ wordpress:
+  driver: local
+  driver_opts:
+   o: bind
+   type: ext4
+   device: /home/yviavant/data/wordpress
